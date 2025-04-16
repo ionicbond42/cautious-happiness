@@ -1,0 +1,4 @@
+user_id,first_credit_date,current_date,income_records,login_records,unusual_operations,total_debt,total_income,credit_grade
+1,2018-05-20,2023-10-15,"[3200, 4500, 5000]","[5, 7, 3]","[]",15000,12700,0
+2,2020-11-08,2023-10-15,"[2800, 3000, 3100]","[12, 15, 10]","['password_reset', 'device_change']",23000,8900,1
+3,2019-03-15,2023-10-15,"[5500, 6000, 6200]","[8, 6, 9]","['high_amount_transfer']",8000,17700,0
