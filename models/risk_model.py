@@ -21,16 +21,52 @@ from datetime import datetime
 from matplotlib import font_manager
 
 # 指定中文字体路径（根据实际路径修改）
-font_path = "C:/Windows/Fonts/msyh.ttc"  # 微软雅黑
-# font_path = "C:/Windows/Fonts/simhei.ttf"  # 黑体
+import os
+import platform
+from matplotlib import font_manager
+
+# 判断平台类型
+if platform.system() == "Windows":
+    font_path = "C:/Windows/Fonts/msyh.ttc"
+else:
+    font_path = "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc"  # Linux下常用中文字体
+
+# 加载字体
+if os.path.exists(font_path):
+    font_manager.fontManager.addfont(font_path)
+    print(f"Loaded font from: {font_path}")
+else:
+    print(f"Font file not found: {font_path}")
 
 # 注册字体
-font_manager.fontManager.addfont(font_path)
 plt.rcParams['font.family'] = font_manager.FontProperties(fname=font_path).get_name()
 
 # ---- 路径配置 ----
 project_root = Path(__file__).parent.parent
 sys.path.append(str(project_root))
+
+# 添加Docker环境检测
+import os
+DOCKER_ENV = os.getenv('DOCKER_ENV', 'false').lower() == 'true'
+
+# 修改路径配置
+if DOCKER_ENV:
+    # Docker容器内路径
+    MODEL_SAVE_PATH = Path("/app/models/saved_models")
+    FEATURE_IMPORTANCE_PATH = Path("/app/reports/feature_analysis")
+    font_path = "/usr/share/fonts/truetype/msttcorefonts/msyh.ttc"  # Docker容器内字体路径
+    data_dir = Path("/app/data/generated")
+else:
+    # 本地开发环境路径
+    MODEL_SAVE_PATH = project_root / "models/saved_models"
+    FEATURE_IMPORTANCE_PATH = project_root / "reports/feature_analysis"
+    font_path = "C:/Windows/Fonts/Microsoft YaHei UI/msyh.ttc"  # Windows本地字体路径
+    data_dir = project_root / "data/generated"
+
+# 确保目录存在
+MODEL_SAVE_PATH.mkdir(parents=True, exist_ok=True)
+FEATURE_IMPORTANCE_PATH.mkdir(parents=True, exist_ok=True)
+data_dir.mkdir(parents=True, exist_ok=True)
 
 # ---- 自定义模块导入 ----
 from features.base_features import generate_base_features
@@ -46,7 +82,7 @@ FEATURE_IMPORTANCE_PATH = project_root / "reports/feature_analysis"
 
 #加载并验证原始数据
 def load_data() -> tuple[pd.DataFrame, pd.DataFrame]:
-    data_dir = project_root / "data/generated"
+    # 使用修改后的data_dir路径
     personal_path = data_dir / "personal_data.csv"
     enterprise_path = data_dir / "enterprise_data.csv"
 
@@ -259,12 +295,19 @@ def analyze_feature_importance(model, X_data: pd.DataFrame, model_name: str) -> 
     """多维特征重要性分析（支持中文）"""
     # 1. 配置中文字体（需提前安装）
     try:
-        font_path = "C:/Windows/Fonts/msyh.ttc"  # 替换为你的字体路径
-        font_manager.fontManager.addfont(font_path)
-        plt.rcParams['font.family'] = font_manager.FontProperties(fname=font_path).get_name()
-    except:
+        if platform.system() == "Windows":
+            font_path = "C:/Windows/Fonts/msyh.ttc"  # Windows字体路径
+        else:
+            font_path = "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc"  # Linux字体路径
+
+        if os.path.exists(font_path):
+            font_manager.fontManager.addfont(font_path)
+            plt.rcParams['font.family'] = font_manager.FontProperties(fname=font_path).get_name()
+        else:
+            raise FileNotFoundError(f"Font file not found: {font_path}")
+    except Exception as e:
         plt.rcParams['font.family'] = 'Arial'  # 回退到英文字体
-        print("警告：中文字体加载失败，已切换为英文显示")
+        print(f"警告：中文字体加载失败，已切换为英文显示。错误信息: {e}")
 
     # 2. 创建输出目录
     FEATURE_IMPORTANCE_PATH.mkdir(parents=True, exist_ok=True)
